@@ -44,25 +44,79 @@ router.post('/login', async (req, res) => {
           return res.status(401).json({ message: '아이디 혹은 비밀번호가 틀렸습니다.' });
         }
 
-        // 로그인 성공, JWT 생성
+        // 로그인 성공, 페이로드 생성
         const payload = { id: user._id };
 
-        const token = jwt.sign(
+        // 액세스 토큰 생성
+        const accessToken = jwt.sign(
           payload,
           process.env.JWT_SECRET,
-          { expiresIn: '1h' }
+          { expiresIn: '15m' }
         );
+
+        // 리프레시 토큰 생성
+        const refreshToken = jwt.sign(
+          payload,
+          process.env.JWT_REFRESH_SECRET,
+          { expiresIn: '7d' }
+        );
+
+        // HttpOnly 쿠키 설정
+        res.cookie('refreshToken', refreshToken, {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'strict',
+          maxAge: 7 * 24 * 60 * 60 * 1000 // 7일 (밀리초 단위)
+        });
 
         res.json({
         message: '로그인 성공',
-          token: token,
+          accessToken: accessToken,
           user: { id: user._id, nickname: user.nickname, profilePic: user.profilePic },
         });
-
     } catch (error) {
         console.error('Login error:', error);
         return res.status(500).json({ message: '서버 에러. 다시 시도해 주세요.' });
     }
+});
+
+// 액세스 토큰 재발급 라우트
+router.post('/refresh-token', async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!refreshToken) {
+    return res.status(401).json({ massage: '리프레시 토큰이 제공되지 않았습니다.' });
+  }
+  try {
+    const decoded = jwt.verify(
+      refreshToken,
+      process.env.JWT_REFRESH_SECRET
+    );
+
+    const accessTokenPayload = { id: decoded.id };
+    const newAccessToken = jwt.sign(
+      accessTokenPayload,
+      process.env.JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    res.json({
+      accessToken: newAccessToken
+    });
+  } catch (error) {
+    console.error('Refresh token error:', error);
+    res.clearCookie('refreshToken', { httpOnly: true, secure: false, sameSite: 'strict' });
+    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      return res.status(403).json({ message: '유효하지 않거나 만료된 토큰입니다. 다시 로그인해 주세요.' });
+    }
+    return res.status(500).json({ message: '서버 에러. 다시 시도해 주세요.' });
+  }
+});
+
+// 로그아웃 라우트
+router.post('/logout', (req, res) => {
+  res.clearCookie('refreshToken', { httpOnly: true, secure: false, sameSite: 'strict' });
+  res.json({ message: '로그아웃 성공' });
 });
 
 module.exports = router;

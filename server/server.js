@@ -1,6 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
 const authRoutes = require('./routes/authRoutes.js');
 
 dotenv.config();
@@ -9,6 +10,7 @@ const app = express();
 const PORT = 5000;
 
 app.use(express.json());
+app.use(cookieParser());
 
 const connectDB = async () => {
     try {

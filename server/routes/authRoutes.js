@@ -70,7 +70,7 @@ router.post('/login', async (req, res) => {
         });
 
         res.json({
-        message: '로그인 성공',
+          message: '로그인 성공',
           accessToken: accessToken,
           user: { id: user._id, nickname: user.nickname, profilePic: user.profilePic },
         });
@@ -85,7 +85,7 @@ router.post('/refresh-token', async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
 
   if (!refreshToken) {
-    return res.status(401).json({ massage: '리프레시 토큰이 제공되지 않았습니다.' });
+    return res.status(401).json({ massage: '리프레시 토큰이 존재하지 않습니다.' });
   }
   try {
     const decoded = jwt.verify(
@@ -93,9 +93,9 @@ router.post('/refresh-token', async (req, res) => {
       process.env.JWT_REFRESH_SECRET
     );
 
-    const accessTokenPayload = { id: decoded.id };
+    const payload = { id: decoded.id };
     const newAccessToken = jwt.sign(
-      accessTokenPayload,
+      payload,
       process.env.JWT_SECRET,
       { expiresIn: '15m' }
     );

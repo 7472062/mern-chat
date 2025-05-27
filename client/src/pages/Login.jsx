@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import './Login.css'
@@ -54,7 +54,7 @@ function Login() {
             }
         } catch (error) {
             console.error('Login error:', error);
-            setError('서버 에러. 다시 시도해 주세요.')
+            setError('로그인 요청 중 에러 발생, 다시 시도해 주세요.')
         }
     }
 

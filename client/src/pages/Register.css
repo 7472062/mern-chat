@@ -1,0 +1,20 @@
+.password-input-wrapper {
+    width: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-wrapper input {
+    width: 100%;
+    box-sizing: border-box;
+    padding-right: 2rem;
+}
+
+.password-toggle-button {
+    position: absolute;
+    right: 0;
+    padding: 0.5rem;
+    background: transparent;
+    border: none;
+}

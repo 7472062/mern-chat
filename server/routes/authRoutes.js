@@ -85,7 +85,7 @@ router.post('/refresh-token', async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
 
   if (!refreshToken) {
-    return res.status(401).json({ massage: '리프레시 토큰이 존재하지 않습니다.' });
+    return res.status(401).json({ message: '리프레시 토큰이 존재하지 않습니다.' });
   }
   try {
     const decoded = jwt.verify(

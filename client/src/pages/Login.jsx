@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import './Login.css'
 
@@ -76,6 +76,9 @@ function Login() {
                     />
                 </div>
                 <button type="submit" className='auth-button'>로그인</button>
+                <p className="auth-switch" style={{ marginTop: '1rem' }}>
+                    계정이 없으신가요? <Link to="/register">가입하기</Link>
+                </p>
             </form>
         </div>
     );

@@ -11,6 +11,13 @@ function Login() {
     const navigate = useNavigate();
     const [error, setError] = useState('');
 
+    useEffect(() => {
+            const accessToken = sessionStorage.getItem('accessToken');
+            if (accessToken) {
+                navigate('/chat');
+            }
+        }, [navigate]);
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     }

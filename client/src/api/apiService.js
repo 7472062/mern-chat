@@ -12,16 +12,15 @@ async function refreshToken() {
     try {
         const response = await fetch(`${BASE_URL}/auth/refresh-token`, {
             method: 'POST',
+            credentials: 'same-origin',
         });
 
         const data = await response.json();
 
-        setAccessToken(data.accessToken);
-
         if (!data.accessToken) {
             throw new Error('No access token received');
         }
-
+        setAccessToken(data.accessToken);
         return data.accessToken;
     } catch (error) {
         console.error('RefreshToken function error:', error);
@@ -44,6 +43,7 @@ async function makeRequest(endpoint, options = {}) {
     const config = {
         ...options,
         headers,
+        credentials: 'same-origin',
     };
 
     try {

@@ -72,7 +72,7 @@ router.post('/login', async (req, res) => {
         res.json({
           message: '로그인 성공',
           accessToken: accessToken,
-          user: { id: user._id, nickname: user.nickname, profilePic: user.profilePic },
+          user: { id: user._id, nickname: user.nickname, profilePic: user.profilePic, friends: user.friends },
         });
     } catch (error) {
         console.error('Login error:', error);

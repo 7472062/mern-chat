@@ -11,6 +11,7 @@ function Chat() {
     // 검색 기능 관련 상태
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState(null);
+    const [isSearchFocused, setIsSearchFocused] = useState(false);
     
     useEffect(() => {
         const accessToken = sessionStorage.getItem('accessToken');
@@ -73,9 +74,32 @@ function Chat() {
         setSearchTerm(e.target.value);
     }
 
-    const handleAddFriend = async (friendId) => {
-        // 친구 추가 API 호출 코드 추가
+    const handleSearchFocus = () => {
+        setIsSearchFocused(true);
+    }
 
+    const handleSearchBlur = () => {
+        setTimeout(() => {
+            setIsSearchFocused(false);
+        }, 150);
+    }
+
+    const handleAddFriend = async (friendIdToAdd) => {
+        if (!user || !friendIdToAdd) return;
+
+        try {
+            const response = await apiService.post('/users/friends/add', { friendId: friendIdToAdd });
+
+            setUser(prevUser => {
+                const updatedFriends = response.friends;
+                const updatedUser = { ...prevUser, friends: updatedFriends };
+
+                sessionStorage.setItem('user', JSON.stringify(updatedUser));
+                return updatedUser;
+            });
+        } catch (error) {
+            console.error('Failed to add friend:', error);
+        }
     }
 
     const handleLogout = async () => {
@@ -108,8 +132,10 @@ function Chat() {
                         className="user-search-input" 
                         value={searchTerm}
                         onChange={handleSearchChange}
+                        onFocus={handleSearchFocus}
+                        onBlur={handleSearchBlur}
                     /> 
-                    {searchResults && (
+                    {isSearchFocused && searchResults && (
                         <div className="search-result-container">
                             <img
                                 src={searchResults.profilePic || '/default-avatar.png'}
@@ -118,9 +144,12 @@ function Chat() {
                             <span className="search-result-nickname">
                                 {searchResults.nickname} <span className="search-result-id">#{searchResults.id}</span>
                             </span>
-                            {user.id !== searchResults.id && (
+                            {user.id !== searchResults.id && (!user.friends.includes(searchResults.id)) && (
                                 <button
-                                    onClick={() => handleAddFriend(searchResults.id)}
+                                    onClick={() => {
+                                        handleAddFriend(searchResults.id);
+                                        setSearchTerm('');
+                                    }}
                                     className="add-friend-button"
                                 >
                                     <span className="add-friend-button-plus">+</span>
@@ -138,7 +167,9 @@ function Chat() {
                 <button onClick={handleLogout} className="logout">Logout</button>
             </nav>
             <div className="chat-content-area">
-
+                <div className="friend-list">
+                    
+                </div>
             </div>
         </div>
     );

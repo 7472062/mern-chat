@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiService } from "../api/apiService";
 
@@ -12,9 +12,11 @@ function Chat() {
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState(null);
     const [isSearchFocused, setIsSearchFocused] = useState(false);
+    const searchContainerRef = useRef(null);
 
     // 친구 목록 관련 상태
     const [friendsList, setFriendsList] = useState([]);
+    const [selectedFriend, setSelectedFriend] = useState(null);
     
     useEffect(() => {
         const accessToken = sessionStorage.getItem('accessToken');
@@ -33,6 +35,19 @@ function Chat() {
             }
         }
     }, [navigate]);
+
+    // 검색창 외부 클릭 감지
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
+                setSearchTerm('');
+                setIsSearchFocused(false);
+                setSearchResults(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     // 검색어 변경 시 호출
     useEffect(() => {
@@ -68,7 +83,7 @@ function Chat() {
                 console.error("Search failed:", error);
                 setSearchResults(null);
             }
-        }, 500);
+        }, 250);
 
         return () => clearTimeout(delayDebounceFn);
     }, [searchTerm]); 
@@ -95,16 +110,6 @@ function Chat() {
         setSearchTerm(e.target.value);
     }
 
-    const handleSearchFocus = () => {
-        setIsSearchFocused(true);
-    }
-
-    const handleSearchBlur = () => {
-        setTimeout(() => {
-            setIsSearchFocused(false);
-        }, 150);
-    }
-
     const handleAddFriend = async (friendIdToAdd) => {
         if (!user || !friendIdToAdd) return;
 
@@ -118,6 +123,10 @@ function Chat() {
                 sessionStorage.setItem('user', JSON.stringify(updatedUser));
                 return updatedUser;
             });
+
+            setSearchTerm('');
++           setSearchResults(null);
++           setIsSearchFocused(false);
         } catch (error) {
             console.error('Failed to add friend:', error);
         }
@@ -146,15 +155,14 @@ function Chat() {
         <div className="chat-page-container">
             <nav className="navbar">
                 <div className="navbar-brand">Concord</div>
-                <div className="navbar-search">
+                <div className="navbar-search" ref={searchContainerRef}>
                     <input 
                         type="text" 
                         placeholder="Search user with #id" 
                         className="user-search-input" 
                         value={searchTerm}
                         onChange={handleSearchChange}
-                        onFocus={handleSearchFocus}
-                        onBlur={handleSearchBlur}
+                        onFocus={() => setIsSearchFocused(true)}
                     /> 
                     {isSearchFocused && searchResults && (
                         <div className="search-result-container">
@@ -169,7 +177,6 @@ function Chat() {
                                 <button
                                     onClick={() => {
                                         handleAddFriend(searchResults.id);
-                                        setSearchTerm('');
                                     }}
                                     className="add-friend-button"
                                 >
@@ -182,7 +189,7 @@ function Chat() {
                 <div className="navbar-user">
                     <img src={profilePic} className="profile-picture"/>
                     <span className="nickname">{user.nickname} 
-                        <div className="user-id">#{user.id}</div>
+                        <span className="user-id" style={{display: 'block'}}>#{user.id}</span>
                     </span>
                 </div>
                 <button onClick={handleLogout} className="logout">Logout</button>
@@ -192,7 +199,11 @@ function Chat() {
                     {friendsList.length > 0 ? (
                         <ul className="friend-list">
                             {friendsList.map((friend) => (
-                                <li key={friend._id} className="friend-item-box">
+                                <li 
+                                    key={friend._id} 
+                                    className={`friend-item-box ${selectedFriend === friend._id ? 'selected' : ''}`}
+                                    onClick={() => setSelectedFriend(friend._id)}
+                                >
                                     <img
                                         src={friend.profilePic || '/default-avatar.png'}
                                         className="friend-avatar"
@@ -202,7 +213,7 @@ function Chat() {
                             ))}
                         </ul>
                     ) : (
-                        <p className="no-friends-message">No friends</p>
+                        <p className="no-friends-message">No Friends</p>
                     )}
                 </div>
             </div>

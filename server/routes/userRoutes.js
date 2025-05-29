@@ -1,6 +1,6 @@
 const express = require('express');
 const User = require('../models/User.js');
-const { protect } = require('../middleware/authMiddleware.js');
+const { protect } = require('../middlewares/authMiddleware.js');
 
 const router = express.Router();
 
@@ -12,14 +12,14 @@ router.get('/search', protect, async (req, res) => {
     }
 
     try {
-        const user = await User.findOne({ username: searchId })
+        const user = await User.findOne({ _id: searchId })
 
         if (!user) {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
 
         res.json({
-            _id: user._id,
+            id: user._id,
             nickname: user.nickname,
             profilePic: user.profilePic,
         });

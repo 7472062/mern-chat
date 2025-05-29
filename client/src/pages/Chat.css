@@ -5,6 +5,10 @@
 
 .navbar {
     display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
     align-items: center;
     justify-content: space-between;
     padding: 10px 20px;
@@ -18,10 +22,12 @@
 }
 
 .navbar-search {
+    position: relative;
     flex-grow: 1;
     display: flex;
     justify-content: center;
     align-items: center;
+    
     margin: 0 2.5rem;
 }
 
@@ -30,6 +36,7 @@
     border: 0px solid #000;
     border-radius: 15px;
     outline: none;
+    z-index: 100;
     font-size: 1.25rem;
     padding: 10px 15px;
 }
@@ -69,4 +76,62 @@
 
 .logout:hover {
     background-color: #ffffffaa;
+}
+
+.search-result-container {
+    display: flex;
+    position: absolute;
+    align-items: center;
+    top: 30%;
+    left: 0;
+    right: 0;
+    z-index: 90;
+    padding: 2.5px 5px;
+    padding-top: 2rem;
+    background-color: #fff;
+    border: 1px solid #000;
+    border-radius: 8px;
+    color: #000;
+}
+
+.search-result-avatar {
+    width: 2rem;
+    height: 2rem;
+    border: 2px solid #5865f2;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.search-result-nickname {
+    font-size: 1.5rem;
+    padding-left: 0.5rem;
+}
+
+.search-result-id {
+    color: #00000070;
+}
+
+.add-friend-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    font-size: 1.5rem;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    background-color: #5865f2;
+    border: 1px solid #000;
+    flex-shrink: 0;
+    transition: background-color 0.2s ease;
+}
+
+.add-friend-button:hover {
+  background-color: #4954c8;
+  border: 1px solid #000;
+}
+
+.add-friend-button-plus {
+    padding-bottom: 0.2rem;
+    color: #fff;
 }

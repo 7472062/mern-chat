@@ -67,4 +67,21 @@ router.post('/friends/add', protect, async (req, res) => {
     }
 });
 
+router.get('/my-friends', protect, async (req, res) => {
+    try {
+        const currentUserFriendDetails = await User.findById(req.user._id)
+            .populate({
+                path: 'friends',
+                select: '_id nickname profilePic',
+            });
+        if (!currentUserFriendDetails) {
+            return res.status(404).json({ message: 'Current user not found.' });
+        }
+        res.json(currentUserFriendDetails.friends || []);
+    } catch (error) {
+        console.error('Friends list error:', error);
+        res.status(500).json({ message: '서버 에러.' });
+    }
+});
+
 module.exports = router;

@@ -1,6 +1,7 @@
 .chat-page-container {
     display: flex;
     flex-direction: column;
+    height: 100vh
 }
 
 .navbar {
@@ -134,4 +135,50 @@
 .add-friend-button-plus {
     padding-bottom: 0.2rem;
     color: #fff;
+}
+
+.chat-content-area {
+    display: flex;
+    flex-grow: 1;
+    margin-top: 80px;
+}
+
+.friend-avatar {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+}
+
+.friend-list-panel {
+    width: 240px;
+    border-right: 1px solid #777777;
+    overflow-y: auto;
+}
+
+.friend-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    flex-grow: 1;
+}
+
+.friend-item-box {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    border-bottom: 1px solid #777;
+    cursor: pointer;
+    transition: background-color 0.1s ease-in-out;
+}
+
+.friend-item-box:hover {
+    background-color: #4954c8;
+}
+
+.friend-nickname {
+    font-size: 1.5rem;
+    margin-left: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

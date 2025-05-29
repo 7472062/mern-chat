@@ -12,6 +12,9 @@ function Chat() {
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState(null);
     const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+    // 친구 목록 관련 상태
+    const [friendsList, setFriendsList] = useState([]);
     
     useEffect(() => {
         const accessToken = sessionStorage.getItem('accessToken');
@@ -69,6 +72,24 @@ function Chat() {
 
         return () => clearTimeout(delayDebounceFn);
     }, [searchTerm]); 
+
+    // 친구 상세 목록 가져오기
+    useEffect(() => {
+        if (user && user.friends) {
+            const friendDetails = async () => {
+                try {
+                    const friendsData = await apiService.get('/users/my-friends');
+                    setFriendsList(friendsData || []);
+                } catch (error) {
+                    console.error('Friends list error:', error);
+                    setFriendsList([]);
+                }
+            }
+            friendDetails();
+        } else {
+            setFriendsList([]);
+        }
+    }, [user]);
 
     const handleSearchChange = (e) => {
         setSearchTerm(e.target.value);
@@ -167,8 +188,22 @@ function Chat() {
                 <button onClick={handleLogout} className="logout">Logout</button>
             </nav>
             <div className="chat-content-area">
-                <div className="friend-list">
-                    
+                <div className="friend-list-panel">
+                    {friendsList.length > 0 ? (
+                        <ul className="friend-list">
+                            {friendsList.map((friend) => (
+                                <li key={friend._id} className="friend-item-box">
+                                    <img
+                                        src={friend.profilePic || '/default-avatar.png'}
+                                        className="friend-avatar"
+                                    />
+                                    <span className="friend-nickname">{friend.nickname}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="no-friends-message">No friends</p>
+                    )}
                 </div>
             </div>
         </div>

@@ -4,6 +4,9 @@ const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const authRoutes = require('./routes/authRoutes.js');
 const userRoutes = require('./routes/userRoutes.js');
+const conversationRoutes = require('./routes/conversationRoutes.js');
+const http = require('http');
+const initializeSocketIO = require('./socket/socketHandler.js');
 
 dotenv.config();
 
@@ -30,7 +33,13 @@ app.get('/test', (req, res) => {
 
 app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
+app.use('/conversations', conversationRoutes);
 
-app.listen(PORT, () => {
+// HTTP 서버 설정
+const server = http.createServer(app);
+
+initializeSocketIO(server);
+
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

@@ -2,6 +2,7 @@ const express = require('express');
 const User = require('../models/User.js');
 const { protect } = require('../middlewares/authMiddleware.js');
 const mongoose = require('mongoose');
+const Conversation = require('../models/Conversation.js');
 
 const router = express.Router();
 
@@ -77,7 +78,36 @@ router.get('/my-friends', protect, async (req, res) => {
         if (!currentUserFriendDetails) {
             return res.status(404).json({ message: 'Current user not found.' });
         }
-        res.json(currentUserFriendDetails.friends || []);
+        if (!Array.isArray(currentUserFriendDetails.friends) || currentUserFriendDetails.friends.length === 0) {
+            return res.json([]);
+        }
+        
+        const sortedFriends = await Promise.all(
+            currentUserFriendDetails.friends.map(async (friend) => {
+                const participantsArray = [currentUserFriendDetails._id, friend._id].sort((a, b) => a.toString().localeCompare(b.toString()));
+                
+                const conversation = await Conversation.findOne(
+                    { participants: { $all: participantsArray, } },
+                    'updatedAt' // lastMessage 필드와 updatedAt 가져오기
+                );
+
+                return {
+                    _id: friend._id,
+                    nickname: friend.nickname,
+                    profilePic: friend.profilePic,
+                    lastActivity: conversation ? conversation.updatedAt : null,
+                };
+            })
+        );
+
+        sortedFriends.sort((a, b) => {
+            if (b.lastActivity === null) return -1;
+            if (a.lastActivity === null) return 1;
+            return new Date(b.lastActivity) - new Date(a.lastActivity);
+        });
+
+        res.json(sortedFriends);
+
     } catch (error) {
         console.error('Friends list error:', error);
         res.status(500).json({ message: '서버 에러.' });

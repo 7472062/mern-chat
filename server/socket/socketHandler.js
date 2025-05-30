@@ -55,14 +55,12 @@ function initializeSocketIO(httpServer) {
                         $push: {
                             messages: {
                                 from: from,
-                                to: to,
                                 text: text,
                             }
                         },
                     },
                     { upsert: true, new: true, setDefaultsOnInsert: true }
-                ).populate('messages.from', 'nickname profilePic')
-                 .populate('messages.to', 'nickname profilePic');
+                ).populate('messages.from', 'nickname profilePic');
 
                 const newMessage = conversation.messages[conversation.messages.length - 1];
 

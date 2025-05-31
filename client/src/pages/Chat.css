@@ -2,6 +2,7 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
+    overflow: hidden;
 }
 
 .navbar {
@@ -139,6 +140,8 @@
 .chat-content-area {
     display: flex;
     margin-top: 80px;
+    flex-grow: 1;
+    overflow: hidden;
     height: calc(100vh - 80px);
 }
 
@@ -193,4 +196,123 @@
     align-items: center;
     text-align: center;
     font-size: 2rem;
+}
+
+.no-chat-selected {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+
+}
+
+.chat-window {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.messages-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    padding-right: 0.5rem;
+}
+
+.message-item {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    margin-bottom: -2rem;
+    padding: 0 1rem;
+}
+
+.message-text {
+    border-radius: 1rem;
+    font-size: 1.25rem;
+    padding: 5px 1rem;
+}
+
+.my-message {
+    align-self: flex-end;
+}
+
+.other-message {
+    align-self: flex-start;
+}
+
+.message-content {
+    display: flex;
+    align-items: flex-start;
+}
+
+.message-time {
+    margin: 2.5rem 0.5rem;
+    margin-bottom: 0;
+}
+
+.my-message .message-text {
+    background-color: #5865f2;
+    border-top-right-radius: 2px;
+}
+
+.message-sender {
+    margin-top: 1rem;
+    margin-bottom: -1rem;
+}
+
+.message-sender-info {
+    display: flex;
+    margin-bottom: -10px;
+}
+
+.message-avatar {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    margin-left: -36px;
+    margin-right: 5px;
+    position: relative;
+    top: 22px;
+    z-index: 1;
+}
+
+.my-message .message-sender-info {
+    display: none;
+}
+
+.other-message .message-content {
+    flex-direction: row-reverse;
+}
+
+.other-message .message-text {
+    background-color: #777;
+    border-top-left-radius: 2px;
+}
+
+.message-input-form {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+}
+
+.message-input {
+    flex-grow: 1;
+    padding: 10px 15px;
+    border: 1px solid #5865f2;
+    border-radius: 20px;
+    font-size: 1rem;
+    resize: none;
+    outline: none;
+}
+
+.send-button {
+    position: absolute;
+    right: 15px;
+    border: none;
+    border-radius: 20px;
+    background-color: #5865f2;
 }

@@ -47,25 +47,30 @@ function initializeSocketIO(httpServer) {
                 socket.emit('messageError', { message: '잘못된 메세지 형식입니다.', originalData: data });
                 return;
             }
+            const participantsArray = [from, to].sort((a, b) => a.toString().localeCompare(b.toString()));
 
             try {
-                let conversation = await Conversation.findOneAndUpdate(
-                    { participants: { $all: [from, to].sort() } },
-                    {
-                        $push: {
-                            messages: {
-                                from: from,
-                                text: text,
-                            }
-                        },
-                    },
-                    { upsert: true, new: true, setDefaultsOnInsert: true }
-                ).populate('messages.from', 'nickname profilePic');
+                let conversation = await Conversation.findOne({ participants: { $all: participantsArray } });
+                const newMessageData = { from: from, text: text, createdAt: new Date() }; // createdAt 추가
 
-                const newMessage = conversation.messages[conversation.messages.length - 1];
+                if (conversation) {
+                    conversation.messages.push(newMessageData);
+                    await conversation.save();
+                } else {
+                    conversation = new Conversation({
+                        participants: participantsArray,
+                        messages: [newMessageData],
+                    });
+                    await conversation.save();
+                }
 
-                io.to(to.toString()).emit('receiveMessage', newMessage);
-                socket.emit('receiveMessage', newMessage);
+                const populatedConversation = await Conversation.findById(conversation._id)
+                    .populate('messages.from', 'nickname profilePic');
+
+                const newMessageResponse = populatedConversation.messages[populatedConversation.messages.length - 1];
+                
+                io.to(to.toString()).emit('receiveMessage', newMessageResponse);
+                socket.emit('receiveMessage', newMessageResponse);
 
                 console.log(`Message from ${socket.user.nickname} to user ID ${to}: ${text}`);
 

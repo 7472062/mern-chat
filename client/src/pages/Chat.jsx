@@ -1,8 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiService } from "../api/apiService";
+import io from 'socket.io-client';
+import { IoSend } from 'react-icons/io5';
 
 import './Chat.css';
+
+const SOCKET_SERVER_URL = 'http://localhost:5050';
 
 function Chat() {
     const [user, setUser] = useState(null)
@@ -17,6 +21,12 @@ function Chat() {
     // 친구 목록 관련 상태
     const [friendsList, setFriendsList] = useState([]);
     const [selectedFriend, setSelectedFriend] = useState(null);
+
+    // 채팅 관련 상태
+    const [messages, setMessages] = useState([]);
+    const [newMessage, setNewMessage] = useState('');
+    const socketRef = useRef(null);
+    const messagesEndRef = useRef(null);
     
     useEffect(() => {
         const accessToken = sessionStorage.getItem('accessToken');
@@ -106,6 +116,76 @@ function Chat() {
         }
     }, [user]);
 
+    // 친구 선택 변경 시 메세지 불러오기
+    useEffect(() => {
+        if (!selectedFriend) {
+            setMessages([]);
+            return;
+        }
+        const fetchMessages = async () => {
+            try {
+                const fetchedMessages = await apiService.get(`/conversations/${selectedFriend}`);
+                setMessages(fetchedMessages || []);
+            } catch (error) {
+                console.error('Failed to fetch messages:', error);
+                setMessages([]);
+            }
+        }
+        fetchMessages();
+    }, [selectedFriend, user])
+
+    // Socket.IO 연결 및 이벤트 리스너 설정
+    useEffect(() => {
+        if (!user) return;
+
+        if (socketRef.current) {
+            socketRef.current.disconnect();
+        }
+
+        const newSocket = io(SOCKET_SERVER_URL, {
+            auth: { token: sessionStorage.getItem('accessToken') }
+        });
+        socketRef.current = newSocket;
+
+        newSocket.on('connect', () => console.log('Socket connected:', newSocket.id));
+        newSocket.on('disconnect', (reason) => console.log('Socket disconnected:', reason));
+        newSocket.on('connect_error', (error) => console.error('Socket connection error:', error));
+
+        newSocket.on('receiveMessage', (incomingMessage) => {
+            if (selectedFriend && incomingMessage && incomingMessage.from) {
+                const senderId = incomingMessage.from._id;
+                const currentUserId = user.id;
+            
+                if (senderId === selectedFriend || senderId === currentUserId) {
+                    setMessages(prevMessages => [...prevMessages, incomingMessage]);
+                }
+            }
+        });
+        
+        newSocket.on('messageError', (errorData) => console.error('Message sending error:', errorData));
+
+        return () => {
+            if (newSocket) newSocket.disconnect();
+        };
+    }, [user, selectedFriend]);
+
+    const handleSendMessage = (e) => {
+        e.preventDefault();
+        if (!newMessage.trim() || !selectedFriend || !socketRef.current || !socketRef.current.connected) {
+            return;
+        }
+        const messageData = {
+            to: selectedFriend,
+            text: newMessage.trim(),
+        };
+        socketRef.current.emit('sendMessage', messageData);
+        setNewMessage('');
+    }
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
+
     const handleSearchChange = (e) => {
         setSearchTerm(e.target.value);
     }
@@ -133,8 +213,10 @@ function Chat() {
     }
 
     const handleLogout = async () => {
-        // 웹소켓 연결 해제 코드 추가
-    
+        if (socketRef.current && socketRef.current.connected) {
+            socketRef.current.disconnect();
+            console.log('Socket disconnected on logout');
+        }
         try {
             await apiService.post('/auth/logout');
         } catch (error) {
@@ -214,6 +296,63 @@ function Chat() {
                         </ul>
                     ) : (
                         <p className="no-friends-message">No Friends</p>
+                    )}
+                </div>
+                <div className="chat-window">
+                    {selectedFriend ? (
+                        <>
+                            <div className="messages-list">
+                                {messages.map((msg, index) => {
+                                    const isFirstMessage = index === 0;
+                                    const prevMessage = !isFirstMessage ? messages[index - 1] : null;
+
+                                    // 발신자 정보를 표시할지 여부 결정
+                                    let showSenderInfo = false;
+                                    if (isFirstMessage || !prevMessage || prevMessage.from._id !== msg.from._id) {
+                                        showSenderInfo = true;
+                                    } else {
+                                        if (msg.createdAt.substring(0, 16) !== prevMessage.createdAt.substring(0, 16)) {
+                                            showSenderInfo = true;
+                                        }
+                                    }
+                                    return (
+                                        <div
+                                            key={msg._id}
+                                            className={`message-item ${msg.from._id === user.id ? 'my-message' : 'other-message'} ${showSenderInfo ? 'first-in-group' : 'continuation-message'}`}
+                                        >
+                                            {showSenderInfo && (
+                                                <div className="message-sender-info">
+                                                    <img src={msg.from.profilePic || '/default-avatar.png'} className="message-avatar" />
+                                                    <span className="message-sender">{msg.from.nickname}</span>
+                                                </div>
+                                            )}
+                                            <div className="message-content">
+                                                {showSenderInfo && (
+                                                    <span className="message-time">{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                                                )}
+                                                <p className="message-text">{msg.text}</p>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                                <div ref={messagesEndRef} />
+                            </div>
+                            <form onSubmit={handleSendMessage} className="message-input-form">
+                                <input
+                                    type="text"
+                                    value={newMessage}
+                                    onChange={(e) => setNewMessage(e.target.value)}
+                                    placeholder="Type a message..."
+                                    className="message-input"
+                                    autoFocus
+                                />
+                                <button type="submit" className="send-button"><IoSend /></button>
+                            </form>
+                        </>
+                    ) : (
+                        <div className="no-chat-selected">
+                            <p>Select a Friend</p>
+                        </div>
                     )}
                 </div>
             </div>

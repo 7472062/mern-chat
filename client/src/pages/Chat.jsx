@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { apiService } from "../api/apiService";
 import io from 'socket.io-client';
 import { IoSend } from 'react-icons/io5';
+import { FaCamera } from 'react-icons/fa';
 
 import './Chat.css';
 
@@ -27,6 +28,9 @@ function Chat() {
     const [newMessage, setNewMessage] = useState('');
     const socketRef = useRef(null);
     const messagesEndRef = useRef(null);
+
+    // 파일 관련 상태
+    const fileInputRef = useRef(null);
     
     useEffect(() => {
         const accessToken = sessionStorage.getItem('accessToken');
@@ -227,6 +231,38 @@ function Chat() {
         }
     }
 
+    const handleProfilePicClick = () => {
+        fileInputRef.current.click();
+    }
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('profilePicFile', file);
+
+        try {
+            const response = await apiService.post('/users/profile-picture', formData);
+            if (response && response.user) {
+                setUser(prevUser => {
+                    const updatedUser = { ...prevUser, profilePic: response.user.profilePic };
+                    sessionStorage.setItem('user', JSON.stringify(updatedUser));
+                    return updatedUser;
+                });
+            } else {
+                throw new Error('프로필 사진 정보가 응답에 없습니다.');
+            }
+        } catch (error) {
+            console.error('Failed to upload profile picture:', error);
+            alert(`프로필 사진 변경 실패: ${error.message || '알 수 없는 오류'}`);
+        } finally {
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
+        }
+    }
+
     if (!user) {
         return null;
     }
@@ -269,7 +305,17 @@ function Chat() {
                     )}
                 </div>
                 <div className="navbar-user">
-                    <img src={profilePic} className="profile-picture"/>
+                    <span className="profile-picture-container" onClick={handleProfilePicClick} style={{ cursor: 'pointer' }}>
+                        <img src={profilePic} className="profile-picture" />
+                        <FaCamera className="profile-camera-icon" />
+                    </span>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        style={{ display: 'none' }}
+                        accept="image/*"
+                        onChange={handleFileChange}
+                    />
                     <span className="nickname">{user.nickname} 
                         <span className="user-id" style={{display: 'block'}}>#{user.id}</span>
                     </span>

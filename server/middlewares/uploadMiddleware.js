@@ -8,11 +8,12 @@ const profilePicStorage = multer.diskStorage({
         cb(null, dir);
     },
     filename: function (req, file, cb) {
-        if (req.user || !req. user.id) {
+        if (!req.user || !req.user.id) {
             return cb(new Error('사용자 ID를 찾을 수 없습니다.'));
         }
         const userId = req.user.id;
-        cb(null, `${userId}${path.extname(file.originalname)}`);
+        const timestamp = Date.now();
+        cb(null, `${userId}-${timestamp}${path.extname(file.originalname)}`);
     }
 });
 

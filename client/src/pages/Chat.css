@@ -316,3 +316,24 @@
     border-radius: 20px;
     background-color: #5865f2;
 }
+
+.profile-picture-container {
+    position: relative;
+    margin-bottom: -7px;
+}
+
+.profile-camera-icon {
+    position: absolute;
+    bottom: 15px;
+    right: 17px;
+    font-size: 2rem;
+    opacity: 0;
+}
+
+.profile-picture-container:hover .profile-camera-icon {
+    opacity: 1;
+}
+
+.profile-picture-container:hover .profile-picture {
+    filter: brightness(0.8);
+}

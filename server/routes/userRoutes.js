@@ -127,7 +127,7 @@ router.post('/profile-picture', protect, uploadProfilePic.single('profilePicFile
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
         if (user.profilePic) {
-            const oldPicPath = path.join(__dirname, '..', '..', user.profilePic.substring(1));
+            const oldPicPath = path.join(__dirname, '..', user.profilePic.substring(1));
             if (fs.existsSync(oldPicPath)) {
                 fs.unlink(oldPicPath, (err) => {
                     if (err) {

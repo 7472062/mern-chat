@@ -17,6 +17,10 @@ export default defineConfig({
         ws: true,
         changeOrigin: true,
       },
+      '/uploads': {
+        target: 'http://host.docker.internal:5050',
+        changeOrigin: true,
+      },
     },
   },
 })

@@ -46,9 +46,13 @@ async function refreshToken() {
 async function makeRequest(endpoint, options = {}) {
     let token = getAccessToken();
     const headers = {
-        'Content-Type': 'application/json',
         ...options.headers,
     };
+    const isFormData = options.body instanceof FormData;
+
+    if (!isFormData && options.body && !headers['Content-Type']) {
+        headers['Content-Type'] = 'application/json';
+    }
 
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
@@ -59,6 +63,12 @@ async function makeRequest(endpoint, options = {}) {
         headers,
         credentials: 'same-origin',
     };
+
+    if (options.body && !isFormData) {
+        config.body = JSON.stringify(options.body);
+    } else if (isFormData) {
+        config.body = options.body;
+    }
 
     config._retry = config._retry || false;
 
@@ -77,6 +87,8 @@ async function makeRequest(endpoint, options = {}) {
                     }).then(async (newTokenFromQueue) => {
                         // 큐에서 새 토큰을 받으면 원래 요청 재시도
                         const newConfig = { ...config, headers: { ...config.headers, 'Authorization': `Bearer ${newTokenFromQueue}` }, _retry: true };
+
+
                         console.log(`Retrying queued request to ${endpoint} with new token.`);
                         const queuedRetryResponse = await fetch(`${BASE_URL}${endpoint}`, newConfig);
                         if (!queuedRetryResponse.ok) {
@@ -99,13 +111,14 @@ async function makeRequest(endpoint, options = {}) {
                     console.log(`Retrying current request to ${endpoint} with new token.`);
                     const retryResponse = await fetch(`${BASE_URL}${endpoint}`, newConfigForCurrentRetry);
 
+                    processQueue(null, newAccessToken);
+
                     if (!retryResponse.ok) {
                         processQueue(new Error(`Retry request to ${endpoint} failed`), null);
                         throw new Error(`Retry request to ${endpoint} failed`);
                     }
                     // 토큰 새로고침 성공 후
                     console.log('Token refresh successful. Processing queued requests.');
-                    processQueue(null, newAccessToken);
 
                     if (retryResponse.status === 204) {
                         return null;
@@ -130,7 +143,7 @@ async function makeRequest(endpoint, options = {}) {
 
 export const apiService = {
     get: (endpoint, options = {}) => makeRequest(endpoint, { ...options, method: 'GET' }),
-    post: (endpoint, body, options = {}) => makeRequest(endpoint, { ...options, method: 'POST', body: JSON.stringify(body) }),
-    put: (endpoint, body, options = {}) => makeRequest(endpoint, { ...options, method: 'PUT', body: JSON.stringify(body) }),
+    post: (endpoint, body, options = {}) => makeRequest(endpoint, { ...options, method: 'POST', body: body }),
+    put: (endpoint, body, options = {}) => makeRequest(endpoint, { ...options, method: 'PUT', body: body }),
     delete: (endpoint, options = {}) => makeRequest(endpoint, { ...options, method: 'DELETE' }),
 };

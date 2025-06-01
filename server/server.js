@@ -6,6 +6,7 @@ const authRoutes = require('./routes/authRoutes.js');
 const userRoutes = require('./routes/userRoutes.js');
 const conversationRoutes = require('./routes/conversationRoutes.js');
 const http = require('http');
+const path = require('path');
 const initializeSocketIO = require('./socket/socketHandler.js');
 
 dotenv.config();
@@ -34,6 +35,7 @@ app.get('/test', (req, res) => {
 app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
 app.use('/conversations', conversationRoutes);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // HTTP 서버 설정
 const server = http.createServer(app);
